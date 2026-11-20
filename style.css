@@ -564,6 +564,7 @@ html, body {
   align-items: center;
   padding-bottom: 6px;
   cursor: pointer;
+  pointer-events: auto;
   z-index: 5;
   transition: transform 0.04s;
 }
