@@ -145,8 +145,9 @@ import { resolveWrongPitch } from './core/music-theory.js';
   const DIFF_MAP = {
     'scarecrow': { text: '★ 초급', cls: 'diff-easy' },
     'friend': { text: '★★ 중급', cls: 'diff-normal' },
+    'forest-walk': { text: '★★ 중급', cls: 'diff-normal' },
     'town': { text: '★★★ 고급', cls: 'diff-hard' },
-    'forest-walk': { text: '★★★ 고급', cls: 'diff-hard' }
+    'radetzky': { text: '★★★ 고급', cls: 'diff-hard' }
   };
 
   async function loadRankings() {

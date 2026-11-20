@@ -48,8 +48,9 @@ export default async function handler(req, res) {
   const DIFF_FALLBACK_MAP = {
     'scarecrow': { difficulty: '초급', stars: '★☆☆' },
     'friend': { difficulty: '중급', stars: '★★☆' },
+    'forest-walk': { difficulty: '중급', stars: '★★☆' },
     'town': { difficulty: '고급', stars: '★★★' },
-    'forest-walk': { difficulty: '고급', stars: '★★★' }
+    'radetzky': { difficulty: '고급', stars: '★★★' }
   };
 
   try {

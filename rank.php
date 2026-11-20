@@ -111,8 +111,9 @@ if ($action === 'list') {
         $diffFallbackMap = [
             'scarecrow'   => ['diff' => '초급', 'stars' => '★☆☆'],
             'friend'      => ['diff' => '중급', 'stars' => '★★☆'],
+            'forest-walk' => ['diff' => '중급', 'stars' => '★★☆'],
             'town'        => ['diff' => '고급', 'stars' => '★★★'],
-            'forest-walk' => ['diff' => '고급', 'stars' => '★★★'],
+            'radetzky'    => ['diff' => '고급', 'stars' => '★★★'],
         ];
 
         $rankings = [];
@@ -151,8 +152,9 @@ if ($action === 'submit') {
         $diffFallbackMap = [
             'scarecrow'   => ['diff' => '초급', 'stars' => '★☆☆'],
             'friend'      => ['diff' => '중급', 'stars' => '★★☆'],
+            'forest-walk' => ['diff' => '중급', 'stars' => '★★☆'],
             'town'        => ['diff' => '고급', 'stars' => '★★★'],
-            'forest-walk' => ['diff' => '고급', 'stars' => '★★★'],
+            'radetzky'    => ['diff' => '고급', 'stars' => '★★★'],
         ];
         $fb = $diffFallbackMap[$songId] ?? ['diff' => '초급', 'stars' => '★☆☆'];
         $difficulty = $fb['diff'];

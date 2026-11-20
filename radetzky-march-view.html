@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>라데츠키 행진곡 (Radetzky March) - 최종 완성 악보 검증 뷰어</title>
+  <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.9.2/build/opensheetmusicdisplay.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      padding: 24px;
+    }
+    .header {
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+      background: #1e293b;
+      padding: 20px 24px;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    h1 { font-size: 24px; color: #38bdf8; font-weight: 700; }
+    .subtitle { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+    .badge {
+      display: inline-block;
+      background: #10b981;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      margin-left: 8px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    button:hover { background: #2563eb; }
+    button.secondary {
+      background: #475569;
+    }
+    button.secondary:hover { background: #334155; }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      padding: 20px;
+      overflow: hidden;
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    #osmdContainer {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 24px 16px;
+      min-height: 400px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      overflow-x: auto;
+    }
+    /* Comparison layout */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .compare-item {
+      background: #0b0f19;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+    }
+    .compare-item h3 {
+      font-size: 15px;
+      color: #38bdf8;
+      margin-bottom: 10px;
+    }
+    .compare-item img {
+      width: 100%;
+      border-radius: 4px;
+      background: #fff;
+    }
+    /* Note Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+    th, td {
+      border: 1px solid #334155;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    th {
+      background: #0f172a;
+      color: #38bdf8;
+      font-weight: 600;
+    }
+    tr:nth-child(even) { background: #182234; }
+    .note-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: 600;
+      margin: 1px;
+    }
+    .note-normal { background: #0369a1; color: #e0f2fe; }
+    .note-sharp { background: #b91c1c; color: #fee2e2; }
+    .note-rest { background: #475569; color: #cbd5e1; }
+    .highlight-edit {
+      background: #065f46;
+      border-left: 4px solid #10b981;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1>라데츠키 행진곡 (Radetzky March) <span class="badge">3마디 리듬 교정 완료</span></h1>
+      <div class="subtitle">작곡: 요한 슈트라우스 1세 | 대상: 오른손 멜로디 (20마디 전곡) | 렌더러: OpenSheetMusicDisplay</div>
+    </div>
+    <div class="controls">
+      <button onclick="changeZoom(0.1)">확대 (+)</button>
+      <button onclick="changeZoom(-0.1)">축소 (-)</button>
+      <button class="secondary" onclick="resetZoom()">원래 크기</button>
+      <button class="secondary" onclick="downloadXml()">MusicXML 다운로드</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- OSMD 렌더링 카드 -->
+    <div class="card">
+      <div class="card-title">
+        🎼 OSMD 최종 완성 악보 렌더링 결과
+        <span style="font-size: 12px; color: #10b981; font-weight: normal;">(3마디: 라-솔#-라-시 8분음표 4개 + 높은도/높은레 4분음표 반영)</span>
+      </div>
+      <div id="osmdContainer"></div>
+    </div>
+
+    <!-- 마디별 계이름 및 박자 대조 테이블 -->
+    <div class="card">
+      <div class="card-title">📋 20마디 전곡 계이름 및 음표 상세표</div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 70px;">마디</th>
+            <th style="width: 140px;">구분</th>
+            <th>구성 음표 및 박자 (음정 / 길이 / 임시표)</th>
+            <th style="width: 90px;">합계 박자</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>M 1</strong></td>
+            <td>인트로 팡파르</td>
+            <td>
+              <span class="note-badge note-normal">C5 (8분)</span>
+              <span class="note-badge note-normal">C5 (8분)</span>
+              <span class="note-badge note-normal">C5 (8분)</span>
+              <span class="note-badge note-rest">[8분쉼표]</span> | 
+              <span class="note-badge note-normal">C5 (8분)</span>
+              <span class="note-badge note-normal">C5 (8분)</span>
+              <span class="note-badge note-normal">C5 (8분)</span>
+              <span class="note-badge note-rest">[8분쉼표]</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 2</strong></td>
+            <td>도입 선율</td>
+            <td>
+              <span class="note-badge note-normal">E5 (4분)</span>
+              <span class="note-badge note-normal">D5 (4분)</span>
+              <span class="note-badge note-normal">C5 (점4분)</span>
+              <span class="note-badge note-normal">B4 (8분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr class="highlight-edit">
+            <td><strong>M 3 ✨</strong></td>
+            <td>8분 4개 + 4분 2개</td>
+            <td>
+              <span class="note-badge note-normal">A4 (8분)</span>
+              <span class="note-badge note-sharp">G#4 (8분 ♯)</span>
+              <span class="note-badge note-normal">A4 (8분)</span>
+              <span class="note-badge note-normal">B4 (8분)</span> | 
+              <span class="note-badge note-normal">C5 (4분 높은도)</span> | 
+              <span class="note-badge note-normal">D5 (4분 높은레)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 4</strong></td>
+            <td>테마 픽업</td>
+            <td>
+              <span class="note-badge note-normal">G4 (4분)</span>
+              <span class="note-badge note-rest">[4분쉼표]</span>
+              <span class="note-badge note-rest">[4분쉼표]</span> | 
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 5</strong></td>
+            <td>메인 테마 1</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span> | 
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 6</strong></td>
+            <td>메인 테마 2</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">D4 (4분)</span>
+              <span class="note-badge note-normal">C4 (4분)</span> | 
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 7</strong></td>
+            <td>메인 테마 3</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span> | 
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 8</strong></td>
+            <td>테마 종지 1</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">A4 (4분)</span>
+              <span class="note-badge note-normal">G4 (4분)</span> | 
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 9</strong></td>
+            <td>발전부 1</td>
+            <td>
+              <span class="note-badge note-normal">F4 (4분)</span>
+              <span class="note-badge note-normal">A4 (4분)</span>
+              <span class="note-badge note-normal">G4 (4분)</span> | 
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">D4 (8분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 10</strong></td>
+            <td>발전부 2</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">A4 (4분)</span>
+              <span class="note-badge note-normal">G4 (4분)</span> | 
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 11</strong></td>
+            <td>클라이맥스</td>
+            <td>
+              <span class="note-badge note-normal">D4 (4분)</span>
+              <span class="note-badge note-normal">B4 (2분)</span>
+              <span class="note-badge note-normal">A4 (4분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 12</strong></td>
+            <td>반음계 순차구</td>
+            <td>
+              <span class="note-badge note-normal">G4 (4분)</span>
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-sharp">F#4 (8분 ♯)</span> | 
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">A4 (8분)</span>
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">F♮4 (8분 ♮)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 13</strong></td>
+            <td>주제 재현 1</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span> | 
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 14</strong></td>
+            <td>주제 재현 2</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">D4 (4분)</span>
+              <span class="note-badge note-normal">C4 (4분)</span> | 
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 15</strong></td>
+            <td>주제 재현 3</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span> | 
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-sharp">D#4 (8분 ♯)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 16</strong></td>
+            <td>주제 종지 2</td>
+            <td>
+              <span class="note-badge note-normal">E4 (4분)</span>
+              <span class="note-badge note-normal">A4 (4분)</span>
+              <span class="note-badge note-normal">G4 (4분)</span> | 
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 17</strong></td>
+            <td>코다 1</td>
+            <td>
+              <span class="note-badge note-sharp">F#4 (4분 ♯)</span> | 
+              <span class="note-badge note-normal">E5 (4분 높은미)</span> | 
+              <span class="note-badge note-normal">D5 (2분 높은레)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 18</strong></td>
+            <td>코다 2</td>
+            <td>
+              <span class="note-badge note-rest">[4분쉼표]</span> | 
+              <span class="note-badge note-normal">D5 (4분 높은레)</span> | 
+              <span class="note-badge note-normal">C5 (2분 높은도)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 19</strong></td>
+            <td>스케일 하강</td>
+            <td>
+              <span class="note-badge note-normal">B4 (점4분)</span>
+              <span class="note-badge note-normal">A4 (8분)</span> | 
+              <span class="note-badge note-normal">G4 (8분)</span>
+              <span class="note-badge note-normal">F4 (8분)</span>
+              <span class="note-badge note-normal">E4 (8분)</span>
+              <span class="note-badge note-normal">D4 (8분)</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+          <tr>
+            <td><strong>M 20</strong></td>
+            <td>최종 종지</td>
+            <td>
+              <span class="note-badge note-normal">C4 (4분)</span>
+              <span class="note-badge note-normal">C4 (4분)</span>
+              <span class="note-badge note-normal">C4 (4분)</span> | 
+              <span class="note-badge note-rest">[4분쉼표]</span>
+            </td>
+            <td>4/4 (4박)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 원본 이미지 대조 카드 -->
+    <div class="card">
+      <div class="card-title">🔍 원본 제공 악보 이미지 대조</div>
+      <div class="compare-grid">
+        <div class="compare-item">
+          <h3>[이미지 1] 1~4마디 (인트로 및 전주)</h3>
+          <img src="/scratch/media_1795174291383_8bbec2c9.jpg" alt="1-4마디">
+        </div>
+        <div class="compare-item">
+          <h3>[이미지 2] 5~12마디 (주제부 및 발전부)</h3>
+          <img src="/scratch/media_1795174303718_f2ebc2af.jpg" alt="5-12마디">
+        </div>
+        <div class="compare-item">
+          <h3>[이미지 3] 13~20마디 (주제 재현 및 종지부)</h3>
+          <img src="/scratch/media_1795174321761_04241e82.jpg" alt="13-20마디">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="xmlSource" type="application/xml"></script>
+
+  <script>
+    let osmd = null;
+    let currentZoom = 1.0;
+
+    async function init() {
+      const container = document.getElementById('osmdContainer');
+      osmd = new opensheetmusicdisplay.OpenSheetMusicDisplay(container, {
+        autoResize: true,
+        backend: 'svg',
+        drawTitle: true,
+        drawSubtitle: true,
+        drawComposer: true,
+        drawPartNames: false,
+        drawingParameters: 'compacttight'
+      });
+
+      try {
+        const res = await fetch('/battle-game/radetzky-march.musicxml?t=' + Date.now());
+        const xmlText = await res.text();
+        document.getElementById('xmlSource').textContent = xmlText;
+        await osmd.load(xmlText);
+        osmd.zoom = currentZoom;
+        osmd.render();
+      } catch (err) {
+        console.error('OSMD Load Error:', err);
+        container.innerHTML = '<div style="color: red; padding: 20px;">MusicXML 로드 실패: ' + err.message + '</div>';
+      }
+    }
+
+    function changeZoom(delta) {
+      if (!osmd) return;
+      currentZoom = Math.max(0.5, Math.min(2.5, currentZoom + delta));
+      osmd.zoom = currentZoom;
+      osmd.render();
+    }
+
+    function resetZoom() {
+      if (!osmd) return;
+      currentZoom = 1.0;
+      osmd.zoom = currentZoom;
+      osmd.render();
+    }
+
+    function downloadXml() {
+      const text = document.getElementById('xmlSource').textContent;
+      const blob = new Blob([text], { type: 'application/vnd.recordare.musicxml+xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'radetzky-march.musicxml';
+      a.click();
+    }
+
+    window.addEventListener('load', init);
+  </script>
+</body>
+</html>
