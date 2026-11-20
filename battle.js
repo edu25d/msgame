@@ -12,6 +12,7 @@ import { ScoreOverlay } from './score/score-overlay.js';
 import { HintController } from './core/hint-controller.js';
 import { cleanScoreToSingleStaff } from './core/score-cleaner.js';
 import { extractPlayableSequence } from './core/playback-order.js';
+import { resolveWrongPitch } from './core/music-theory.js';
 
 (() => {
   // ── DOM 요소 ──────────────────────────────────────────────────
@@ -262,6 +263,9 @@ import { extractPlayableSequence } from './core/playback-order.js';
     wrongCount = 0;
     elapsedSec = 0;
 
+    Keyboard.clearAllHighlights();
+    Keyboard.clearAccidentalCue();
+
     startTime = performance.now();
     clearInterval(elapsedTimerId);
     elapsedTimerId = setInterval(tickTimer, 40);
@@ -310,6 +314,8 @@ import { extractPlayableSequence } from './core/playback-order.js';
       hintController.stop(); // 힌트 즉시 소거
       scoreOverlay.triggerSuccessFeedback(); // 150ms 에메랄드 블룸
       scoreOverlay.clearWrongNote(true);
+      Keyboard.flashFeedback(midi, true);
+      Keyboard.clearAccidentalCue();
 
       combo++;
       if (combo > maxCombo) maxCombo = combo;
@@ -348,11 +354,37 @@ import { extractPlayableSequence } from './core/playback-order.js';
       wrongCount++;
       hudCombo.classList.remove('visible');
 
+      Keyboard.flashFeedback(midi, false);
       Synth.playWrong();
       scoreOverlay.triggerWrongFeedback();
 
       const pitch = { step: target.step, octave: target.octave, alter: target.alter };
       scoreOverlay.showWrongNote(target.rawNoteIndex, midi, pitch);
+
+      // [맥락 기반 오답 피치 판별] 조표/임시표 실수 감지
+      const wrongPitch = resolveWrongPitch(midi, pitch);
+      const isMissingAccidental = Boolean(
+        target.alter !== 0 &&
+        wrongPitch.step === target.step &&
+        wrongPitch.octave === target.octave &&
+        wrongPitch.alter === 0
+      );
+      const isMissingNatural = Boolean(
+        target.alter === 0 &&
+        (target.hasNatural || target.keySignatureAlter !== 0) &&
+        wrongPitch.step === target.step &&
+        wrongPitch.octave === target.octave &&
+        wrongPitch.alter !== 0
+      );
+
+      if (isMissingNatural) {
+        scoreOverlay.blinkAccidentalOrKeySignature(target);
+        Keyboard.flashAccidentalCue(target.midi, '♮');
+      } else if (isMissingAccidental) {
+        const symbol = target.alter > 0 ? '♯' : '♭';
+        scoreOverlay.blinkAccidentalOrKeySignature(target);
+        Keyboard.flashAccidentalCue(target.midi, symbol);
+      }
 
       // 오답 후 1.5초 지체 시 힌트 재가동
       hintController.stop();
@@ -466,6 +498,8 @@ import { extractPlayableSequence } from './core/playback-order.js';
     clearInterval(elapsedTimerId);
     hintController.stop();
     scoreObserver?.disconnect();
+    Keyboard.clearAllHighlights();
+    Keyboard.clearAccidentalCue();
 
     resultModal.classList.remove('active');
     gameView.classList.remove('active');

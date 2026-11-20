@@ -41,6 +41,7 @@ export const Keyboard = (() => {
   let keyElements = new Map();   // midi -> HTMLElement
   let highlightMidis = new Set();
   let stepHintMidis = new Set();
+  let accidentalCueTimer = null;
 
   function init(opts = {}) {
     container = opts.container || document.getElementById('keyboard-container');
@@ -236,6 +237,45 @@ export const Keyboard = (() => {
     if (onKeyUp) onKeyUp(midi);
   }
 
+  // ── 정답/오답 건반 플래시 피드백 ──────────────────────────────
+  function flashFeedback(midi, isCorrect) {
+    const el = keyElements.get(midi);
+    if (!el) return;
+
+    el.classList.remove('key-feedback-correct', 'key-feedback-wrong');
+    void el.offsetWidth; // DOM reflow 유도
+    el.classList.add(isCorrect ? 'key-feedback-correct' : 'key-feedback-wrong');
+
+    const handleAnimEnd = () => {
+      el.classList.remove('key-feedback-correct', 'key-feedback-wrong');
+      el.removeEventListener('animationend', handleAnimEnd);
+    };
+    el.addEventListener('animationend', handleAnimEnd);
+  }
+
+  // ── 조표/임시표 실수 건반 배지 큐 (♯, ♭, ♮) ────────────────────
+  function flashAccidentalCue(targetMidi, symbol = '♭') {
+    const el = keyElements.get(targetMidi);
+    if (!el) return;
+
+    clearAccidentalCue();
+
+    const badge = document.createElement('span');
+    badge.className = 'accidental-cue-badge';
+    badge.textContent = symbol;
+    el.appendChild(badge);
+
+    accidentalCueTimer = setTimeout(() => {
+      clearAccidentalCue();
+    }, 2850);
+  }
+
+  function clearAccidentalCue() {
+    clearTimeout(accidentalCueTimer);
+    accidentalCueTimer = null;
+    container?.querySelectorAll('.accidental-cue-badge').forEach(b => b.remove());
+  }
+
   // ── 디딤돌 건반 일시 반짝임 (정답 건반은 절대 칠하지 않음) ───────────
   function highlightStepKey(midi, labelText, duration = 400) {
     const el = keyElements.get(midi);
@@ -247,6 +287,7 @@ export const Keyboard = (() => {
   }
 
   function clearAllHighlights() {
+    clearAccidentalCue();
     keyElements.forEach(el => el.classList.remove('highlight-step', 'highlight-target'));
   }
 
@@ -257,6 +298,9 @@ export const Keyboard = (() => {
   return {
     init,
     render,
+    flashFeedback,
+    flashAccidentalCue,
+    clearAccidentalCue,
     highlightStepKey,
     clearAllHighlights,
     clearStepHints,
@@ -264,3 +308,7 @@ export const Keyboard = (() => {
     triggerKeyUp
   };
 })();
+
+if (typeof window !== 'undefined') {
+  window.Keyboard = Keyboard;
+}

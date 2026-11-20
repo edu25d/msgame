@@ -513,6 +513,92 @@ html, body {
   pointer-events: none;
 }
 
+/* ── 건반 정답/오답 피드백 플래시 애니메이션 ── */
+.kb-white-key.key-feedback-correct {
+  animation: correct-flash-white 0.35s ease-out;
+}
+.kb-white-key.key-feedback-wrong {
+  animation: wrong-flash-white 0.35s ease-out;
+}
+
+@keyframes correct-flash-white {
+  0%, 100% { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 85%, #e2e8f0 100%); }
+  25%, 75% { background: #a8e3bd !important; }
+}
+
+@keyframes wrong-flash-white {
+  0%, 100% { background: linear-gradient(180deg, #ffffff 0%, #f8fafc 85%, #e2e8f0 100%); }
+  25%, 75% { background: #f2bcbc !important; }
+}
+
+.kb-black-key.key-feedback-correct {
+  animation: correct-flash-black 0.35s ease-out;
+}
+.kb-black-key.key-feedback-wrong {
+  animation: wrong-flash-black 0.35s ease-out;
+}
+
+@keyframes correct-flash-black {
+  0%, 100% { background: linear-gradient(180deg, #334155 0%, #1e293b 80%, #0f172a 100%); }
+  25%, 75% { background: linear-gradient(180deg, #34d399, #059669) !important; }
+}
+
+@keyframes wrong-flash-black {
+  0%, 100% { background: linear-gradient(180deg, #334155 0%, #1e293b 80%, #0f172a 100%); }
+  25%, 75% { background: linear-gradient(180deg, #c45b5b, #943232) !important; }
+}
+
+/* ── 조표/임시표 오답 시 건반 심볼 배지 ── */
+.accidental-cue-badge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  animation: cue-two-blinks 2.8s ease-in-out forwards;
+  z-index: 10;
+}
+
+.kb-black-key .accidental-cue-badge {
+  top: 25%;
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 100, 100, 0.6);
+}
+
+.kb-white-key .accidental-cue-badge {
+  top: 25%;
+  color: #d86e75;
+  text-shadow: 0 0 4px rgba(255, 180, 180, 0.7);
+}
+
+@keyframes cue-two-blinks {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(3px);
+  }
+  8%, 36% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  44.6% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-1px);
+  }
+  44.7%, 55.3% {
+    opacity: 0;
+  }
+  63.4%, 91.4% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-1px);
+  }
+}
+
 /* ── 3·2·1 카운트다운 오버레이 ────────────────────────────────── */
 .countdown-overlay {
   position: absolute;
@@ -922,6 +1008,23 @@ html, body {
 
 .score-line-space-guide .guide-space {
   fill: rgba(135, 195, 245, 0.14);
+}
+
+/* ── 오답 힌트 시 줄-칸 가이드 ── */
+.score-wrong-line-space-guide {
+  pointer-events: none;
+  opacity: 0;
+  animation: guide-fade-in 0.25s ease forwards;
+}
+
+.score-wrong-line-space-guide .wrong-guide-line {
+  stroke: rgba(225, 110, 110, 0.45);
+  stroke-width: 1.2;
+  stroke-dasharray: 3 2;
+}
+
+.score-wrong-line-space-guide .wrong-guide-space {
+  fill: rgba(245, 155, 155, 0.16);
 }
 
 /* 오답 마커 */
