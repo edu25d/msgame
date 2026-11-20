@@ -1,0 +1,981 @@
+/* ============================================================
+   battle-game/style.css
+   도레미 스피드런 챌린지 — 가로 모드 및 100dvh 최적화 스타일
+   ============================================================ */
+
+:root {
+  --bg-deep: #0b0f19;
+  --bg-surface: #111827;
+  --bg-card: #182234;
+  --bg-card-hover: #202d44;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+
+  --cyan: #06b6d4;
+  --mint: #10b981;
+  --coral: #f43f5e;
+  --amber: #f59e0b;
+  --violet: #8b5cf6;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --key-white: #ffffff;
+  --key-white-active: #e2e8f0;
+  --key-black: #1e293b;
+  --key-black-active: #0f172a;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+/* ── 앱 메인 컨테이너 ─────────────────────────────────────────── */
+#app {
+  width: 100vw;
+  height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 세로 모드 감지 시 90도 자동 회전 (가상 랜드스케이프) */
+@media screen and (orientation: portrait) {
+  #app {
+    position: fixed;
+    top: 0;
+    left: 100vw;
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(90deg);
+    transform-origin: top left;
+  }
+}
+
+/* ── 뷰 전환 ─────────────────────────────────────────────────── */
+.view {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+.view.active {
+  display: flex;
+}
+
+/* ============================================================
+   [화면 1] 로비 뷰 (Lobby View)
+   ============================================================ */
+#lobby-view {
+  flex-direction: column;
+  padding: 12px 18px;
+  gap: 10px;
+}
+
+.lobby-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  flex-shrink: 0;
+}
+.lobby-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.lobby-title .logo-icon {
+  font-size: 1.3rem;
+}
+
+.lobby-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 14px;
+  min-height: 0;
+}
+
+/* 좌측: 곡 선택 카드 목록 */
+.song-cards-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.song-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.15s, background-color 0.15s, border-color 0.15s;
+}
+.song-card:hover {
+  background: var(--bg-card-hover);
+  border-color: rgba(6, 182, 212, 0.4);
+}
+.song-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.song-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  width: fit-content;
+}
+.badge-easy { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+.badge-mid  { background: rgba(245, 158, 11, 0.18); color: #fbbf24; }
+.badge-hard { background: rgba(244, 63, 94, 0.18);  color: #fb7185; }
+
+.song-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.btn-play-song {
+  background: linear-gradient(135deg, var(--cyan), #2563eb);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+  transition: transform 0.1s, opacity 0.1s;
+}
+.btn-play-song:active {
+  transform: scale(0.96);
+  opacity: 0.9;
+}
+
+/* 우측: TOP 20 랭킹 전광판 */
+.ranking-column {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.ranking-header {
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ranking-header h3 {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--amber);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ranking-list-wrap {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.ranking-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+.ranking-table th {
+  text-align: left;
+  padding: 5px 10px;
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.7rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  background: var(--bg-card);
+}
+.ranking-table td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+.rank-num { font-weight: 800; width: 36px; text-align: center; }
+.rank-num.top-1 { color: #fbbf24; font-size: 0.9rem; }
+.rank-num.top-2 { color: #e2e8f0; font-size: 0.85rem; }
+.rank-num.top-3 { color: #d97706; font-size: 0.85rem; }
+.rank-nick { font-weight: 600; color: var(--text-primary); max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.rank-song { color: var(--text-secondary); max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+.rank-time { color: var(--cyan); font-family: monospace; }
+.rank-score { font-weight: 700; color: #34d399; text-align: right; }
+
+.empty-ranking {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+/* ============================================================
+   [화면 2] 인게임 플레이 뷰 (Game View)
+   ============================================================ */
+#game-view {
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: #0b0f19;
+}
+
+/* 악보 영역 (상단 약 46% 공간 확보, HUD를 내부에 절대배치) */
+.score-section {
+  flex: 0 0 46%;
+  height: 46%;
+  width: 100%;
+  position: relative;
+  background: #ffffff;
+  overflow: hidden;
+  border-bottom: 2px solid #2d3748;
+}
+
+/* 악보 내 플로팅 오버레이 (헤더 바 없음) */
+.score-floating-hud {
+  position: absolute;
+  top: 6px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 50;
+  pointer-events: none;
+}
+.hud-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: auto;
+}
+.hud-song-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1e293b;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 3px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.hud-diff-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 12px;
+  background: #0f172a;
+  color: #38bdf8;
+}
+
+.hud-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  pointer-events: auto;
+}
+.hud-combo {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #ea580c;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 3px 9px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  display: none;
+}
+.hud-combo.visible {
+  display: inline-flex;
+}
+.hud-timer {
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-family: monospace;
+  color: #0284c7;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 3px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+.hud-btn-exit {
+  background: rgba(244, 63, 94, 0.9);
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* OSMD 스크롤 컨테이너 (줄 넘김 정밀 스냅 스크롤 보장) */
+.score-scroll-wrapper {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  position: relative;
+  display: block;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.score-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+}
+#score-osmd-container {
+  width: 100%;
+  display: block;
+  position: relative;
+  padding: 0;
+  margin: 0;
+}
+#score-osmd-container svg {
+  display: block;
+  margin: 0 auto;
+}
+#score-osmd-container svg g.vf-stavenote,
+#score-osmd-container svg .vf-notehead {
+  overflow: visible !important;
+}
+
+/* 피아노 건반 영역 (하단 약 54% 공간 넉넉하게 확보) */
+.keyboard-section {
+  flex: 0 0 54%;
+  height: 54%;
+  width: 100%;
+  position: relative;
+  background: var(--bg-deep);
+  overflow: hidden;
+  padding: 4px 0 6px 0;
+  box-sizing: border-box;
+}
+#keyboard-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.kb-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.kb-row {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  touch-action: none;
+}
+.kb-white-keys-layer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+.kb-black-keys-layer {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 흰건반 */
+.kb-white-key {
+  flex: 1;
+  height: 100%;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 85%, #e2e8f0 100%);
+  border: 1px solid #94a3b8;
+  border-top: none;
+  border-radius: 0 0 7px 7px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 8px;
+  box-shadow: inset 0 -3px 0 #cbd5e1, 0 3px 4px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.04s, background-color 0.04s;
+  z-index: 1;
+}
+.kb-white-key.pressed {
+  background: #cbd5e1;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+  transform: translateY(2px);
+}
+.kb-white-key.highlight-target {
+  background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.7) !important;
+}
+.kb-white-key.highlight-step {
+  background: #e1f0fa !important;
+  border-color: #8ac0e8 !important;
+  box-shadow: inset 0 -3px 0 #bae6fd, 0 0 10px rgba(56, 189, 248, 0.45) !important;
+}
+
+/* 흰건반 라벨 */
+.kb-label {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #334155;
+  pointer-events: none;
+}
+.kb-white-key.is-do .kb-label {
+  color: #d97706;
+  font-size: 0.98rem;
+}
+
+/* 검은건반 */
+.kb-black-key {
+  position: absolute;
+  top: 0;
+  background: linear-gradient(180deg, #334155 0%, #1e293b 80%, #0f172a 100%);
+  border-radius: 0 0 5px 5px;
+  border: 1px solid #0f172a;
+  border-top: none;
+  box-shadow: inset 0 -2px 0 #475569, 0 4px 6px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  padding-bottom: 6px;
+  cursor: pointer;
+  z-index: 5;
+  transition: transform 0.04s;
+}
+.kb-black-key.edge-left {
+  border-radius: 0 0 5px 0;
+}
+.kb-black-key.pressed {
+  background: #0f172a;
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
+}
+.kb-black-key.highlight-target {
+  background: linear-gradient(180deg, #d97706 0%, #b45309 100%) !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.8) !important;
+}
+.kb-black-key.highlight-step {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%) !important;
+}
+.kb-black-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #cbd5e1;
+  pointer-events: none;
+}
+
+/* ── 3·2·1 카운트다운 오버레이 ────────────────────────────────── */
+.countdown-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 15, 25, 0.8);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+.countdown-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.countdown-number {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #ffffff;
+  text-shadow: 0 0 30px var(--cyan);
+  animation: countPulse 0.8s ease-in-out infinite alternate;
+}
+@keyframes countPulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  100% { transform: scale(1.1); opacity: 1; }
+}
+
+/* ============================================================
+   [화면 3] 완주 결과 모달 (Result Modal)
+   ============================================================ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+}
+.modal-overlay.active {
+  display: flex;
+}
+#confetti-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 201;
+}
+.modal-card {
+  background: var(--bg-surface);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 90%;
+  max-width: 440px;
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 202;
+  text-align: center;
+}
+.modal-header h2 {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+}
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.stat-box .label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.stat-box .val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.stat-box.highlight .val {
+  color: #34d399;
+}
+
+.submit-box {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.input-nickname {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  color: #ffffff;
+  outline: none;
+}
+.input-nickname:focus {
+  border-color: var(--cyan);
+  background: rgba(255, 255, 255, 0.09);
+}
+.btn-submit-rank {
+  background: linear-gradient(135deg, var(--amber), #ea580c);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-submit-rank:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rank-submit-status {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #38bdf8;
+  min-height: 18px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.btn-secondary {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================================
+   악보 포커스 링 & 힌트 오버레이 스타일 (Score Overlay)
+   기존 '도레미 읽기 연습장' 1:1 정밀 이식
+   ============================================================ */
+
+/* ── 계이름 라벨 및 페이드 힌트 ── */
+.score-syllable {
+  font-family: "Gowun Dodum", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  fill: #655ab9;
+  pointer-events: none;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.score-syllable.is-confirmed {
+  animation: syllable-pop 0.26s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes syllable-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(4px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.score-syllable.is-fading {
+  animation: syllable-fade 3s ease-in-out infinite;
+}
+
+@keyframes syllable-fade {
+  0%, 100% { opacity: 0; }
+  40%, 60% { opacity: 0.35; }
+}
+
+/* ── 음표 머리(Head) 중심의 골드 아우라 & 네온 발광 (옵션 2-A) ── */
+.vf-notehead {
+  overflow: visible !important;
+}
+
+.vf-notehead.notehead-focused {
+  transform-box: fill-box;
+  transform-origin: center;
+  filter: drop-shadow(0 0 3.5px #f5be38) drop-shadow(0 0 8px rgba(245, 195, 60, 0.75));
+  animation: notehead-glow-breathe 2.4s ease-in-out infinite;
+  transition: filter 0.18s ease;
+}
+
+@keyframes notehead-glow-breathe {
+  0%, 100% {
+    filter: drop-shadow(0 0 3px #f5be38) drop-shadow(0 0 7px rgba(245, 195, 60, 0.6));
+  }
+  50% {
+    filter: drop-shadow(0 0 5.5px #f5c448) drop-shadow(0 0 12px rgba(245, 205, 75, 0.9));
+  }
+}
+
+/* 정답 성공 찰나 (150ms 에메랄드 민트 블룸 리워드) */
+.vf-notehead.notehead-focused.is-success {
+  filter: drop-shadow(0 0 6px #46d682) drop-shadow(0 0 14px rgba(70, 214, 130, 0.95)) !important;
+  animation: notehead-success-bloom 0.25s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
+}
+
+@keyframes notehead-success-bloom {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* 오답 시 안도감을 주는 부드러운 도리도리 흔들림 (Micro-Shake) */
+.vf-notehead.notehead-focused.is-wrong {
+  filter: drop-shadow(0 0 5px #e86464) drop-shadow(0 0 10px rgba(232, 100, 100, 0.8)) !important;
+  animation: notehead-wrong-shake 0.26s ease-in-out;
+}
+
+@keyframes notehead-wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-2px); }
+  40% { transform: translateX(2px); }
+  60% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+}
+
+/* 하위 호환: 타원 링 잔여 요소 대응 */
+.score-focus-marker ellipse {
+  fill: #f4c84e;
+  fill-opacity: 0.28;
+  stroke: #e5ba38;
+  stroke-width: 1.2;
+}
+
+/* 힌트 출발점 기준음 동그라미 */
+.score-step-origin {
+  pointer-events: none;
+}
+
+.score-step-origin ellipse {
+  fill: none;
+  stroke: #64b7e4;
+  stroke-width: 1.5;
+}
+
+.score-step-origin-name,
+.score-step-hint-name {
+  font-family: "Gowun Dodum", sans-serif;
+  fill: #397da8;
+  font-size: 12px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* 힌트 계단음 디딤돌 */
+.score-step-hint {
+  pointer-events: none;
+}
+
+.score-step-hint ellipse {
+  fill: #a9d8f5;
+  stroke: #6db5e2;
+  stroke-width: 1.2;
+}
+
+.score-step-hint text,
+.score-step-hint-name {
+  font-family: "Gowun Dodum", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  fill: #397da8;
+  text-anchor: middle;
+}
+
+/* 힌트 덧줄 */
+.score-hint-ledger {
+  stroke: #64b7e4;
+  stroke-width: 1.2;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+/* 방향 화살표 */
+.score-interval-arrow {
+  pointer-events: none;
+}
+
+.score-interval-arrow .arrow-shaft,
+.score-interval-arrow path {
+  fill: none;
+  stroke: rgba(106, 94, 204, 0.72);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  animation: arrow-draw-in 1.8s cubic-bezier(0.2, 0.8, 0.35, 1) forwards;
+  filter: drop-shadow(0 0 1.5px rgba(106, 94, 204, 0.3));
+}
+
+@keyframes arrow-draw-in {
+  0% {
+    stroke-dashoffset: var(--shaft-len, 80px);
+    opacity: 0;
+  }
+  24% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  35% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  43% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+  68% {
+    stroke-dashoffset: var(--shaft-len, 80px);
+    opacity: 0;
+  }
+  88% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+.score-interval-arrow .arrow-head,
+.score-interval-arrow polygon {
+  fill: rgba(106, 94, 204, 0.85);
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+  animation: arrow-head-pop 1.8s ease-out forwards;
+  filter: drop-shadow(0 0 1.5px rgba(106, 94, 204, 0.3));
+}
+
+@keyframes arrow-head-pop {
+  0%, 18% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  24%, 35% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  43%, 68% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  88%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ── [3-C & 4번] 줄-칸 인지 가이드 ── */
+.score-line-space-guide {
+  pointer-events: none;
+  opacity: 0;
+  animation: guide-fade-in 0.35s ease forwards;
+}
+
+@keyframes guide-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+.score-line-space-guide .guide-line {
+  stroke: rgba(90, 160, 225, 0.42);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 3;
+}
+
+.score-line-space-guide .guide-space {
+  fill: rgba(135, 195, 245, 0.14);
+}
+
+/* 오답 마커 */
+.score-wrong-note {
+  pointer-events: none;
+}
+
+.score-wrong-note ellipse {
+  fill: #f2a5a5;
+  stroke: #d86e75;
+  stroke-width: 1.5;
+}
+
+.score-wrong-ledger,
+.score-wrong-note .score-hint-ledger {
+  stroke: #d86e75;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+
+.score-wrong-note text,
+.score-wrong-note-name {
+  font-family: "Gowun Dodum", sans-serif;
+  fill: #c84f59;
+  font-size: 12px !important;
+  font-weight: 700;
+  text-anchor: start;
+}
+
+/* 조표/임시표 점멸 */
+.keysig-accidental-blink {
+  animation: keysig-blink-pulse 1.3s ease-in-out forwards !important;
+}
+
+.keysig-accidental-blink path,
+path.keysig-accidental-blink {
+  animation: keysig-blink-pulse 1.3s ease-in-out forwards !important;
+}
+
+@keyframes keysig-blink-pulse {
+  0%, 100% {
+    filter: none;
+    fill: #000;
+    opacity: 1;
+  }
+  15%, 55%, 85% {
+    filter: drop-shadow(0 0 5px #ff2a2a) drop-shadow(0 0 13px rgba(255, 42, 42, 0.9));
+    fill: #ff2525 !important;
+    opacity: 1;
+  }
+  35%, 70% {
+    filter: drop-shadow(0 0 2px #ff6666);
+    fill: #ff5555 !important;
+    opacity: 0.55;
+  }
+}

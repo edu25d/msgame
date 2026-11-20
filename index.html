@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0b0f19">
+  <!-- Vercel API 주소 (기본값 /api/rank) -->
+  <meta name="api-url" content="/api/rank">
+  <title>도레미 대결 챌린지</title>
+
+  <!-- 웹 폰트 (Pretendard & Gowun Dodum) -->
+  <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/pretendard">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- 오픈소스 라이브러리: OSMD 악보 렌더러 & Confetti 폭죽 효과 -->
+  <script src="https://cdn.jsdelivr.net/npm/opensheetmusicdisplay@1.9.2/build/opensheetmusicdisplay.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- 메인 스타일시트 -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- ============================================================
+         [화면 1] 로비 뷰 (Lobby View)
+         ============================================================ -->
+    <div id="lobby-view" class="view active">
+      <header class="lobby-header">
+        <div class="lobby-title">
+          <span class="logo-icon">🎹</span>
+          <span>도레미 대결 챌린지</span>
+        </div>
+      </header>
+
+      <main class="lobby-content">
+        <!-- 좌측: 엄선 3곡 카드 -->
+        <section class="song-cards-column" id="song-cards-container">
+          <!-- 자바스크립트로 3곡 카드 렌더링 -->
+        </section>
+
+        <!-- 우측: 실시간 TOP 20 랭킹 전광판 -->
+        <section class="ranking-column">
+          <div class="ranking-header">
+            <h3>🏆 실시간 TOP 20</h3>
+            <button id="btn-refresh-rank" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:0.8rem;">🔄 새로고침</button>
+          </div>
+          <div class="ranking-list-wrap">
+            <table class="ranking-table">
+              <thead>
+                <tr>
+                  <th style="width:36px; text-align:center;">순위</th>
+                  <th>닉네임</th>
+                  <th>곡명</th>
+                  <th>시간</th>
+                  <th style="text-align:right;">점수</th>
+                </tr>
+              </thead>
+              <tbody id="ranking-table-body">
+                <tr><td colspan="5" class="empty-ranking">랭킹 불러오는 중...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ============================================================
+         [화면 2] 인게임 플레이 뷰 (Game View)
+         ============================================================ -->
+    <div id="game-view" class="view">
+      <!-- 악보 영역 (상단 ~ 중앙, HUD를 내부에 절대배치하여 세로 높이 극대화) -->
+      <section class="score-section">
+        <!-- 악보 내부 플로팅 HUD (헤더 경계선 없음) -->
+        <div class="score-floating-hud">
+          <div class="hud-left">
+            <span id="hud-song-title" class="hud-song-title">허수아비 아저씨</span>
+            <span id="hud-diff-pill" class="hud-diff-pill">초급 ★☆☆</span>
+          </div>
+          <div class="hud-right">
+            <span id="hud-combo" class="hud-combo">🔥 0 COMBO</span>
+            <span id="hud-timer" class="hud-timer">⏱ 00:00.0</span>
+            <button id="hud-btn-exit" class="hud-btn-exit" title="로비로 나가기">✕</button>
+          </div>
+        </div>
+
+        <!-- OSMD 악보 렌더링 영역 -->
+        <div class="score-scroll-wrapper" id="score-scroll-wrapper">
+          <div id="score-osmd-container"></div>
+        </div>
+      </section>
+
+      <!-- 피아노 건반 영역 (B3~E5 11건반, 버튼 일체 없음) -->
+      <section class="keyboard-section">
+        <div id="keyboard-container"></div>
+      </section>
+
+      <!-- 3·2·1 카운트다운 오버레이 -->
+      <div id="countdown-overlay" class="countdown-overlay">
+        <div id="countdown-number" class="countdown-number">3</div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         [화면 3] 완주 결과 모달 (Result Modal)
+         ============================================================ -->
+    <div id="result-modal" class="modal-overlay">
+      <canvas id="confetti-canvas"></canvas>
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>🎉 완주 성공!</h2>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-box">
+            <span class="label">⏱ 완주 시간</span>
+            <span class="val" id="res-time">00:00.0</span>
+          </div>
+          <div class="stat-box">
+            <span class="label">🎯 정확도</span>
+            <span class="val" id="res-accuracy">100%</span>
+          </div>
+          <div class="stat-box">
+            <span class="label">🔥 최대 콤보</span>
+            <span class="val" id="res-combo">0</span>
+          </div>
+          <div class="stat-box highlight">
+            <span class="label">👑 최종 점수</span>
+            <span class="val" id="res-score">0점</span>
+          </div>
+        </div>
+
+        <div class="submit-box">
+          <input type="text" id="nickname-input" class="input-nickname" placeholder="닉네임 입력 (1~20자)" maxlength="20" autocomplete="off">
+          <button id="btn-submit-rank" class="btn-submit-rank">🏅 랭킹 등록</button>
+        </div>
+
+        <div id="rank-submit-status" class="rank-submit-status"></div>
+
+        <div class="modal-actions">
+          <button id="btn-retry" class="btn-secondary">🔄 다시 도전</button>
+          <button id="btn-back-lobby" class="btn-secondary">📋 다른 곡 선택</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 메인 스크립트 모듈 -->
+  <script type="module" src="battle.js"></script>
+</body>
+</html>
