@@ -99,6 +99,15 @@ import { resolveWrongPitch } from './core/music-theory.js';
     nicknameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') submitRanking();
     });
+
+    // 첫 사용자 터치/클릭 시 AudioContext 사전 언락 보장 (iOS Safari/Chrome 모바일 무음 해제)
+    const unlockAudio = () => {
+      Synth.getContext();
+      window.removeEventListener('pointerdown', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+    };
+    window.addEventListener('pointerdown', unlockAudio, { once: true });
+    window.addEventListener('keydown', unlockAudio, { once: true });
   }
 
   // ── 1. 로비 곡 카드 렌더링 ────────────────────────────────────
