@@ -1,4 +1,4 @@
-# 🎹 도레미 스피드런 챌린지 (Doremi Speedrun Challenge)
+# 🎹 도레미 악보 읽기 챌린지 (Doremi Sheet Music Reading Challenge)
 
 > 웹 피아노 악보 읽기 스피드런 대결 게임입니다.  
 > 높은음자리표와 낮은음자리표의 계이름을 빠르게 읽고 연주하여 최고 점수와 랭킹에 도전하세요!

@@ -514,8 +514,8 @@ export class ScoreViewer {
     // 7. 각 줄(System k)별 결정론적 고정 scrollTop 테이블 구축
     this.systemScrollTops = this.systemStaffCenters.map(yk => Math.max(0, Math.round(yk - y0)));
 
-    // 8. 각 음표(notehead)를 해당하는 줄(System index)에 1:1 사전 매핑
-    const noteheads = Array.from(liveSvg.querySelectorAll('.vf-notehead'));
+    // 8. 각 음표(notehead)를 해당하는 줄(System index)에 1:1 사전 매핑 (쉼표는 배제)
+    const noteheads = this.getPitchNoteheads(liveSvg);
     this.noteToSystemIndex = noteheads.map(head => {
       const hRect = head.getBoundingClientRect();
       const headCenterYInSvg = (hRect.top - svgRect.top) + hRect.height / 2;
@@ -535,6 +535,52 @@ export class ScoreViewer {
     // 9. 초기 렌더링 시 첫 줄(Line 0) 위치로 즉시 스냅 (scrollTop = 0)
     this.currentSystemIndex = 0;
     this.scrollEl.scrollTop = 0;
+  }
+
+  /**
+   * 실제 피치(소리) 음표 머리(Notehead) 요소들만 1:1로 수집 (쉼표 글리프 완벽 배제)
+   * @param {SVGElement} [svg]
+   * @returns {Element[]}
+   */
+  getPitchNoteheads(svg = this.svg) {
+    if (!svg) return [];
+
+    // 1. OSMD graphic 객체가 있으면 GraphicalNotes를 통해 실제 피치 음표만 1:1 역추적
+    if (this.osmd?.graphic?.measureList) {
+      const pitchHeads = [];
+      this.osmd.graphic.measureList.forEach(col => {
+        col.forEach(m => {
+          m.staffEntries.forEach(se => {
+            se.graphicalVoiceEntries.forEach(gve => {
+              gve.notes.forEach(n => {
+                if (!n.sourceNote.isRest()) {
+                  const vfNote = Array.isArray(n.vfnote) ? n.vfnote[0] : n.vfnote;
+                  if (vfNote?.attrs?.id) {
+                    const snId = 'vf-' + vfNote.attrs.id;
+                    const snEl = svg.getElementById ? svg.getElementById(snId) : svg.querySelector('#' + snId);
+                    const head = snEl ? snEl.querySelector('.vf-notehead') : null;
+                    if (head) pitchHeads.push(head);
+                  }
+                }
+              });
+            });
+          });
+        });
+      });
+      if (pitchHeads.length > 0) {
+        return pitchHeads;
+      }
+    }
+
+    // 2. Fallback: graphic 순회가 불가능할 때 VexFlow 쉼표 글리프(세로 높이 18px 초과) 배제
+    const allHeads = Array.from(svg.querySelectorAll('.vf-notehead'));
+    return allHeads.filter(head => {
+      try {
+        const b = head.getBBox();
+        if (b.height > 18) return false;
+      } catch (e) {}
+      return true;
+    });
   }
 
     /**
@@ -579,7 +625,7 @@ export class ScoreViewer {
    */
   getSystemIndexForElement(element) {
     if (!element || !this.svg || !this.noteToSystemIndex) return 0;
-    const noteheads = Array.from(this.svg.querySelectorAll('.vf-notehead'));
+    const noteheads = this.getPitchNoteheads(this.svg);
     const targetIndex = noteheads.indexOf(element);
     if (targetIndex === -1) return 0;
     return this.noteToSystemIndex[targetIndex] ?? 0;

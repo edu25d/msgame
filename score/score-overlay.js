@@ -25,7 +25,11 @@ export class ScoreOverlay {
   attach(svg, rawNoteCount) {
     if (!svg) return;
 
-    const renderedHeads = Array.from(svg.querySelectorAll('.vf-notehead'));
+    const renderedHeads = this.viewer?.getPitchNoteheads
+      ? this.viewer.getPitchNoteheads(svg)
+      : Array.from(svg.querySelectorAll('.vf-notehead')).filter(h => {
+          try { return h.getBBox().height <= 18; } catch (e) { return true; }
+        });
 
     // 이미 현재 SVG에 모든 라벨과 헤드가 온전히 연결되어 있다면 레이어 재구축 없이 포커스만 보장
     if (
@@ -724,8 +728,12 @@ export class ScoreOverlay {
       label.classList.remove('is-confirmed', 'is-fading');
       label.style.opacity = '0';
     });
+    this.svg?.querySelectorAll('.score-syllable')?.forEach(el => {
+      el.textContent = '';
+      el.classList.remove('is-confirmed', 'is-fading');
+      el.style.opacity = '0';
+    });
     this.hintsLayer?.replaceChildren();
-    // labelsLayer scoreLabels kept
     this.focusLayer?.replaceChildren();
   }
 }

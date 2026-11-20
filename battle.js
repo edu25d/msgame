@@ -207,6 +207,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
   // ── 3. 곡 플레이 시작 ──────────────────────────────────────────
   async function startSong(song) {
     currentSong = song;
+    scoreOverlay?.reset();
 
     // 사운드 컨텍스트 언락
     try {
@@ -549,6 +550,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
   function retrySong() {
     resultModal.classList.remove('active');
     hintController.stop();
+    scoreOverlay?.reset();
     if (currentSong) {
       startSong(currentSong);
     } else {
@@ -561,6 +563,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
     clearInterval(elapsedTimerId);
     hintController.stop();
     scoreObserver?.disconnect();
+    scoreOverlay?.reset();
     Keyboard.clearAllHighlights();
     Keyboard.clearAccidentalCue();
     hudCombo.classList.remove('visible', 'combo-pop', 'milestone-bounce');
