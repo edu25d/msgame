@@ -59,17 +59,28 @@ html, body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.15s ease;
 }
 
-/* 세로 모드 감지 시 90도 자동 회전 (가상 랜드스케이프) */
+/* 세로 모드 감지 시 지능형 양방향 가상 랜드스케이프 */
 @media screen and (orientation: portrait) {
-  #app {
+  #app.virtual-landscape-cw {
     position: fixed;
     top: 0;
     left: 100vw;
     width: 100vh;
     height: 100vw;
     transform: rotate(90deg);
+    transform-origin: top left;
+  }
+
+  #app.virtual-landscape-ccw {
+    position: fixed;
+    top: 100vh;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform: rotate(-90deg);
     transform-origin: top left;
   }
 }

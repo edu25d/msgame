@@ -108,6 +108,9 @@ import { resolveWrongPitch } from './core/music-theory.js';
     };
     window.addEventListener('pointerdown', unlockAudio, { once: true });
     window.addEventListener('keydown', unlockAudio, { once: true });
+
+    // 지능형 양방향 회전 감지 시스템 가동 (과제 5)
+    setupOrientationManager();
   }
 
   // ── 1. 로비 곡 카드 렌더링 ────────────────────────────────────
@@ -221,7 +224,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
           }
         }, 80);
       });
-      scoreObserver.observe(scoreOsmdContainer, { childList: true, subtree: true });
+      scoreObserver.observe(scoreOsmdContainer, { childList: true, subtree: false });
     } catch (e) {
       console.error('악보 로드 실패:', e);
       alert('악보 로드 중 오류가 발생했습니다.');
@@ -536,6 +539,83 @@ import { resolveWrongPitch } from './core/music-theory.js';
     lobbyView.classList.add('active');
 
     loadRankings();
+  }
+
+  // ── 지능형 양방향 회전 감지 시스템 (과제 5) ─────────────────────
+  function setupOrientationManager() {
+    const app = document.getElementById('app');
+    if (!app) return;
+
+    let currentVirtualMode = 'cw'; // 'cw'(시계 +90도) | 'ccw'(반시계 -90도)
+
+    function updateOrientation() {
+      const isPortrait = window.innerHeight > window.innerWidth;
+
+      if (!isPortrait) {
+        // 실제 가로 모드 (True Landscape): 브라우저 기본 0도 화면으로 매끄럽게 안착
+        app.classList.remove('virtual-landscape-cw', 'virtual-landscape-ccw');
+      } else {
+        // 세로 모드인 경우: 사용자가 기울인 방향에 맞춰 가상 가로모드 전환
+        if (currentVirtualMode === 'ccw') {
+          app.classList.remove('virtual-landscape-cw');
+          app.classList.add('virtual-landscape-ccw');
+        } else {
+          app.classList.remove('virtual-landscape-ccw');
+          app.classList.add('virtual-landscape-cw');
+        }
+      }
+
+      // 회전 전환 후 건반 크기 재계산
+      setTimeout(() => {
+        if (window.Keyboard?.render) {
+          window.Keyboard.render();
+        }
+      }, 50);
+    }
+
+    // 1. 화면 방향 변경 감지 (표준 screen.orientation 및 legacy window.orientation)
+    if (window.screen?.orientation) {
+      window.screen.orientation.addEventListener('change', () => {
+        const angle = window.screen.orientation.angle;
+        if (angle === 90) currentVirtualMode = 'ccw';
+        else if (angle === 270) currentVirtualMode = 'cw';
+        updateOrientation();
+      });
+    }
+
+    window.addEventListener('orientationchange', () => {
+      const angle = window.orientation;
+      if (angle === 90) currentVirtualMode = 'ccw';
+      else if (angle === -90 || angle === 270) currentVirtualMode = 'cw';
+      updateOrientation();
+    });
+
+    window.addEventListener('resize', updateOrientation);
+
+    // 2. 가속도/자이로스코프 기울기 센서 (세로 상태에서 사용자가 폰을 돌리기 시작할 때 사전 감지)
+    if (typeof window.DeviceOrientationEvent !== 'undefined') {
+      window.addEventListener('deviceorientation', (e) => {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        if (!isPortrait) return; // 실제 가로 상태에서는 자이로 간섭 배제
+
+        const gamma = e.gamma; // 좌우 기울기 각도 (-90 ~ +90)
+        if (typeof gamma !== 'number') return;
+
+        // 왼쪽으로 15도 이상 기울이면 ccw(-90도)로 가상 회전
+        if (gamma < -15 && currentVirtualMode !== 'ccw') {
+          currentVirtualMode = 'ccw';
+          updateOrientation();
+        }
+        // 오른쪽으로 15도 이상 기울이면 cw(+90도)로 가상 회전
+        else if (gamma > 15 && currentVirtualMode !== 'cw') {
+          currentVirtualMode = 'cw';
+          updateOrientation();
+        }
+      }, { passive: true });
+    }
+
+    // 초기 방향 즉시 반영
+    updateOrientation();
   }
 
   function escapeHtml(str) {
