@@ -52,6 +52,8 @@ export const RankClient = (() => {
       nickname: record.nickname,
       song_id: record.song_id,
       song_title: record.song_title,
+      difficulty: record.difficulty,
+      difficulty_stars: record.difficulty_stars,
       score: record.score,
       elapsed_sec: record.elapsed_sec,
       accuracy: record.accuracy,
@@ -79,12 +81,27 @@ export const RankClient = (() => {
   }
 
   // ── 로컬 스토리지 Fallback 헬퍼 ──────────────────────────────────
+  const DIFF_FALLBACK_MAP = {
+    'scarecrow': { difficulty: '초급', stars: '★☆☆' },
+    'friend': { difficulty: '중급', stars: '★★☆' },
+    'town': { difficulty: '고급', stars: '★★★' },
+    'forest-walk': { difficulty: '고급', stars: '★★★' }
+  };
+
   function getLocalRankings(limit = 20) {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       let list = stored ? JSON.parse(stored) : [];
       list.sort((a, b) => b.score - a.score || a.elapsed_sec - b.elapsed_sec);
-      return list.slice(0, limit).map((item, idx) => ({ ...item, rank: idx + 1 }));
+      return list.slice(0, limit).map((item, idx) => {
+        const fallback = DIFF_FALLBACK_MAP[item.song_id] || { difficulty: '초급', stars: '★☆☆' };
+        return {
+          ...item,
+          rank: idx + 1,
+          difficulty: item.difficulty || fallback.difficulty,
+          difficulty_stars: item.difficulty_stars || fallback.stars
+        };
+      });
     } catch (e) {
       return [];
     }

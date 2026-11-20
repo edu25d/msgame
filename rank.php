@@ -61,6 +61,8 @@ try {
             nickname VARCHAR(30) NOT NULL,
             song_id VARCHAR(50) NOT NULL,
             song_title VARCHAR(100) NOT NULL,
+            difficulty VARCHAR(20) DEFAULT '초급',
+            difficulty_stars VARCHAR(20) DEFAULT '★☆☆',
             score INT NOT NULL,
             elapsed_sec DECIMAL(6, 2) NOT NULL,
             accuracy INT NOT NULL,
@@ -69,6 +71,10 @@ try {
             INDEX idx_score (score DESC)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     ");
+
+    // 기존 테이블에 컬럼 누락 시 자동 보완
+    try { $db->exec("ALTER TABLE battle_rankings ADD COLUMN difficulty VARCHAR(20) DEFAULT '초급'"); } catch (Exception $e) {}
+    try { $db->exec("ALTER TABLE battle_rankings ADD COLUMN difficulty_stars VARCHAR(20) DEFAULT '★☆☆'"); } catch (Exception $e) {}
 } catch (Exception $e) {
     jsonErr('DB 초기화 오류: ' . $e->getMessage(), 500);
 }
@@ -93,7 +99,7 @@ if ($action === 'list') {
     try {
         $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 20;
         $stmt = $db->prepare("
-            SELECT id, nickname, song_id, song_title, score, elapsed_sec, accuracy, max_combo, created_at
+            SELECT id, nickname, song_id, song_title, difficulty, difficulty_stars, score, elapsed_sec, accuracy, max_combo, created_at
             FROM battle_rankings
             ORDER BY score DESC, elapsed_sec ASC, created_at ASC
             LIMIT :limit
@@ -102,10 +108,20 @@ if ($action === 'list') {
         $stmt->execute();
         $rows = $stmt->fetchAll();
 
+        $diffFallbackMap = [
+            'scarecrow'   => ['diff' => '초급', 'stars' => '★☆☆'],
+            'friend'      => ['diff' => '중급', 'stars' => '★★☆'],
+            'town'        => ['diff' => '고급', 'stars' => '★★★'],
+            'forest-walk' => ['diff' => '고급', 'stars' => '★★★'],
+        ];
+
         $rankings = [];
         $rank = 1;
         foreach ($rows as $row) {
+            $fallback = $diffFallbackMap[$row['song_id']] ?? ['diff' => '초급', 'stars' => '★☆☆'];
             $row['rank'] = $rank++;
+            $row['difficulty'] = !empty($row['difficulty']) ? $row['difficulty'] : $fallback['diff'];
+            $row['difficulty_stars'] = !empty($row['difficulty_stars']) ? $row['difficulty_stars'] : $fallback['stars'];
             $row['score'] = (int)$row['score'];
             $row['elapsed_sec'] = (float)$row['elapsed_sec'];
             $row['accuracy'] = (int)$row['accuracy'];
@@ -124,10 +140,24 @@ if ($action === 'submit') {
     $nickname   = trim($inputData['nickname'] ?? $_POST['nickname'] ?? '');
     $songId     = trim($inputData['song_id'] ?? $_POST['song_id'] ?? '');
     $songTitle  = trim($inputData['song_title'] ?? $_POST['song_title'] ?? '');
+    $difficulty = trim($inputData['difficulty'] ?? $_POST['difficulty'] ?? '');
+    $diffStars  = trim($inputData['difficulty_stars'] ?? $_POST['difficulty_stars'] ?? '');
     $score      = (int)($inputData['score'] ?? $_POST['score'] ?? 0);
     $elapsedSec = (float)($inputData['elapsed_sec'] ?? $_POST['elapsed_sec'] ?? 0);
     $accuracy   = (int)($inputData['accuracy'] ?? $_POST['accuracy'] ?? 0);
     $maxCombo   = (int)($inputData['max_combo'] ?? $_POST['max_combo'] ?? 0);
+
+    if (empty($difficulty)) {
+        $diffFallbackMap = [
+            'scarecrow'   => ['diff' => '초급', 'stars' => '★☆☆'],
+            'friend'      => ['diff' => '중급', 'stars' => '★★☆'],
+            'town'        => ['diff' => '고급', 'stars' => '★★★'],
+            'forest-walk' => ['diff' => '고급', 'stars' => '★★★'],
+        ];
+        $fb = $diffFallbackMap[$songId] ?? ['diff' => '초급', 'stars' => '★☆☆'];
+        $difficulty = $fb['diff'];
+        $diffStars  = $fb['stars'];
+    }
 
     if (mb_strlen($nickname, 'UTF-8') < 1 || mb_strlen($nickname, 'UTF-8') > 20) {
         jsonErr('닉네임은 1~20자 사이여야 합니다.');
@@ -142,18 +172,20 @@ if ($action === 'submit') {
     try {
         $stmt = $db->prepare("
             INSERT INTO battle_rankings 
-            (nickname, song_id, song_title, score, elapsed_sec, accuracy, max_combo)
+            (nickname, song_id, song_title, difficulty, difficulty_stars, score, elapsed_sec, accuracy, max_combo)
             VALUES 
-            (:nickname, :song_id, :song_title, :score, :elapsed_sec, :accuracy, :max_combo)
+            (:nickname, :song_id, :song_title, :difficulty, :difficulty_stars, :score, :elapsed_sec, :accuracy, :max_combo)
         ");
         $stmt->execute([
-            ':nickname'   => $nickname,
-            ':song_id'    => $songId,
-            ':song_title' => $songTitle,
-            ':score'      => $score,
-            ':elapsed_sec'=> $elapsedSec,
-            ':accuracy'   => $accuracy,
-            ':max_combo'  => $maxCombo
+            ':nickname'        => $nickname,
+            ':song_id'         => $songId,
+            ':song_title'      => $songTitle,
+            ':difficulty'      => $difficulty,
+            ':difficulty_stars'=> $diffStars,
+            ':score'           => $score,
+            ':elapsed_sec'     => $elapsedSec,
+            ':accuracy'        => $accuracy,
+            ':max_combo'       => $maxCombo
         ]);
 
         $insertId = (int)$db->lastInsertId();

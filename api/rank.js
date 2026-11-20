@@ -45,6 +45,12 @@ export default async function handler(req, res) {
   }
 
   const LEADERBOARD_KEY = 'doremi_battle_leaderboard';
+  const DIFF_FALLBACK_MAP = {
+    'scarecrow': { difficulty: '초급', stars: '★☆☆' },
+    'friend': { difficulty: '중급', stars: '★★☆' },
+    'town': { difficulty: '고급', stars: '★★★' },
+    'forest-walk': { difficulty: '고급', stars: '★★★' }
+  };
 
   try {
     // ── 1. GET: TOP 20 랭킹 목록 조회 ──────────────────────────
@@ -61,8 +67,11 @@ export default async function handler(req, res) {
       const rankings = rawMembers.map((str, idx) => {
         try {
           const parsed = typeof str === 'string' ? JSON.parse(str) : str;
+          const fallback = DIFF_FALLBACK_MAP[parsed.song_id] || { difficulty: '초급', stars: '★☆☆' };
           return {
             rank: idx + 1,
+            difficulty: parsed.difficulty || fallback.difficulty,
+            difficulty_stars: parsed.difficulty_stars || fallback.stars,
             ...parsed
           };
         } catch (e) {
@@ -80,7 +89,7 @@ export default async function handler(req, res) {
     // ── 2. POST: 점수 등록 ──────────────────────────────────────
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-      const { nickname, song_id, song_title, score, elapsed_sec, accuracy, max_combo } = body;
+      const { nickname, song_id, song_title, difficulty, difficulty_stars, score, elapsed_sec, accuracy, max_combo } = body;
 
       if (!nickname || typeof nickname !== 'string' || !nickname.trim()) {
         return res.status(400).json({ ok: false, message: '닉네임을 입력해 주세요.' });
@@ -89,12 +98,15 @@ export default async function handler(req, res) {
       const cleanScore = Math.max(0, parseInt(score, 10) || 0);
       const cleanNick = nickname.trim().slice(0, 20);
       const entryId = `${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      const fallback = DIFF_FALLBACK_MAP[song_id] || { difficulty: '초급', stars: '★☆☆' };
 
       const entry = {
         id: entryId,
         nickname: cleanNick,
         song_id: song_id || 'unknown',
         song_title: song_title || '연습곡',
+        difficulty: difficulty || fallback.difficulty,
+        difficulty_stars: difficulty_stars || fallback.stars,
         score: cleanScore,
         elapsed_sec: parseFloat(elapsed_sec) || 0,
         accuracy: parseInt(accuracy, 10) || 100,

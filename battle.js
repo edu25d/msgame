@@ -142,12 +142,19 @@ import { resolveWrongPitch } from './core/music-theory.js';
   }
 
   // ── 2. TOP 20 랭킹 전광판 갱신 ────────────────────────────────
+  const DIFF_MAP = {
+    'scarecrow': { text: '★ 초급', cls: 'diff-easy' },
+    'friend': { text: '★★ 중급', cls: 'diff-normal' },
+    'town': { text: '★★★ 고급', cls: 'diff-hard' },
+    'forest-walk': { text: '★★★ 고급', cls: 'diff-hard' }
+  };
+
   async function loadRankings() {
-    rankingTableBody.innerHTML = '<tr><td colspan="5" class="empty-ranking">랭킹 불러오는 중...</td></tr>';
+    rankingTableBody.innerHTML = '<tr><td colspan="6" class="empty-ranking">랭킹 불러오는 중...</td></tr>';
     try {
       const res = await RankClient.getRankings(20);
       if (!res.ok || !res.rankings || res.rankings.length === 0) {
-        rankingTableBody.innerHTML = '<tr><td colspan="5" class="empty-ranking">아직 등록된 기록이 없습니다. 첫 번째 1위에 도전해보세요!</td></tr>';
+        rankingTableBody.innerHTML = '<tr><td colspan="6" class="empty-ranking">아직 등록된 기록이 없습니다. 첫 번째 1위에 도전해보세요!</td></tr>';
         return;
       }
 
@@ -161,17 +168,39 @@ import { resolveWrongPitch } from './core/music-theory.js';
         else if (item.rank === 2) { rankBadge = '🥈'; rankClass = 'top-2'; }
         else if (item.rank === 3) { rankBadge = '🥉'; rankClass = 'top-3'; }
 
+        // 난이도 배지 판정 (기존 데이터 호환 폴백 지원)
+        const fallback = DIFF_MAP[item.song_id] || { text: '★ 초급', cls: 'diff-easy' };
+        let diffText = fallback.text;
+        let diffCls = fallback.cls;
+        if (item.difficulty) {
+          if (item.difficulty.includes('고급') || item.difficulty === '고급') {
+            diffText = '★★★ 고급';
+            diffCls = 'diff-hard';
+          } else if (item.difficulty.includes('중급') || item.difficulty === '중급') {
+            diffText = '★★ 중급';
+            diffCls = 'diff-normal';
+          } else if (item.difficulty.includes('초급') || item.difficulty === '초급') {
+            diffText = '★ 초급';
+            diffCls = 'diff-easy';
+          } else {
+            diffText = item.difficulty;
+          }
+        }
+
+        const accText = (item.accuracy !== undefined && item.accuracy !== null) ? `${item.accuracy}%` : '100%';
+
         tr.innerHTML = `
           <td class="rank-num ${rankClass}">${rankBadge}</td>
-          <td class="rank-nick" title="${item.nickname}">${escapeHtml(item.nickname)}</td>
-          <td class="rank-song" title="${item.song_title}">${escapeHtml(item.song_title)}</td>
+          <td class="rank-nick" title="${escapeHtml(item.nickname)}">${escapeHtml(item.nickname)}</td>
+          <td class="rank-diff"><span class="rank-diff-badge ${diffCls}">${diffText}</span></td>
           <td class="rank-time">${item.elapsed_sec ? item.elapsed_sec.toFixed(1) + 's' : '-'}</td>
+          <td class="rank-acc">${accText}</td>
           <td class="rank-score">${item.score.toLocaleString()}</td>
         `;
         rankingTableBody.appendChild(tr);
       });
     } catch (err) {
-      rankingTableBody.innerHTML = '<tr><td colspan="5" class="empty-ranking">랭킹을 불러올 수 없습니다.</td></tr>';
+      rankingTableBody.innerHTML = '<tr><td colspan="6" class="empty-ranking">랭킹을 불러올 수 없습니다.</td></tr>';
     }
   }
 
@@ -450,6 +479,8 @@ import { resolveWrongPitch } from './core/music-theory.js';
     lastFinalStats = {
       song_id: currentSong.id,
       song_title: currentSong.title,
+      difficulty: currentSong.difficulty,
+      difficulty_stars: currentSong.stars || currentSong.difficultyStars,
       score: finalScore,
       elapsed_sec: parseFloat(elapsedSec.toFixed(2)),
       accuracy,
