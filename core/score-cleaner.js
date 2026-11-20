@@ -200,6 +200,9 @@ export function cleanScoreToSingleStaff(xmlString) {
     throw new Error('악보에서 파트 데이터를 찾지 못했습니다.');
   }
 
+  // 가사(<lyric>) 태그 일괄 제거 (배틀 게임에서는 가사 표시 불필요 및 오선 하단 40px 여백 확보)
+  doc.querySelectorAll('lyric').forEach(node => node.remove());
+
   // 기본적으로 첫 번째 멜로디 파트를 주 타깃으로 처리
   const mainPart = parts[0];
   let hasRemovedStaff2 = false;

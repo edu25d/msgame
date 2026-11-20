@@ -253,10 +253,10 @@ export function extractPlayableSequence(cleanedXmlString) {
           fifths: currentFifths,
           keySignatureAlter
         });
-      }
 
-      // 쉼표(rest)를 포함하여 XML 내 모든 note 노드 위치를 SVG 렌더링 노드와 1:1 동기화
-      rawNoteCursor++;
+        // 실제 렌더링되는 피치 음표(vf-notehead)와 1:1 동기화를 위해 유효 음표일 때만 증가
+        rawNoteCursor++;
+      }
     });
 
     return notesInMeasure;
