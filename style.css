@@ -315,14 +315,40 @@ html, body {
   font-size: 0.82rem;
   font-weight: 800;
   color: #ea580c;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 3px 9px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 3px 10px;
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   display: none;
+  transform-origin: center;
+  transition: background-color 0.15s, color 0.15s;
 }
 .hud-combo.visible {
   display: inline-flex;
+}
+.hud-combo.combo-pop {
+  animation: combo-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes combo-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* 콤보 마일스톤(5, 10, 20, 30, 40...) 시각적 탄성 바운스 */
+.hud-combo.milestone-bounce {
+  animation: combo-milestone-bounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  color: #c2410c;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.6), 0 3px 8px rgba(0, 0, 0, 0.18);
+  border: 1px solid #fdba74;
+}
+@keyframes combo-milestone-bounce {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.36) rotate(-4deg); }
+  65% { transform: scale(1.18) rotate(3deg); }
+  85% { transform: scale(1.05) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0); }
 }
 .hud-timer {
   font-size: 0.88rem;
@@ -830,7 +856,8 @@ html, body {
   }
 }
 
-/* 정답 성공 찰나 (150ms 에메랄드 민트 블룸 리워드) */
+/* 정답 성공 찰나 (에메랄드 민트 블룸 리워드) */
+.vf-notehead.is-success,
 .vf-notehead.notehead-focused.is-success {
   filter: drop-shadow(0 0 6px #46d682) drop-shadow(0 0 14px rgba(70, 214, 130, 0.95)) !important;
   animation: notehead-success-bloom 0.25s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;

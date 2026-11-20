@@ -265,6 +265,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
 
     Keyboard.clearAllHighlights();
     Keyboard.clearAccidentalCue();
+    hudCombo.classList.remove('visible', 'combo-pop', 'milestone-bounce');
 
     startTime = performance.now();
     clearInterval(elapsedTimerId);
@@ -312,23 +313,42 @@ import { resolveWrongPitch } from './core/music-theory.js';
     if (midi === target.midi) {
       // ── 정답! ─────────────────────────────────────────────
       hintController.stop(); // 힌트 즉시 소거
-      scoreOverlay.triggerSuccessFeedback(); // 150ms 에메랄드 블룸
       scoreOverlay.clearWrongNote(true);
+
+      // 1. 악보 상 정답 계이름 확정 표시 (고운돋움 보라색 syllable-pop 애니메이션)
+      scoreOverlay.markConfirmed(target.rawNoteIndex, target.solfege);
+
+      // 2. 맞춘 음표 머리에 280ms 독립 에메랄드 민트 블룸 발동
+      scoreOverlay.triggerSuccessFeedback(target.rawNoteIndex);
+
+      // 3. 건반 에메랄드 플래시 피드백
       Keyboard.flashFeedback(midi, true);
       Keyboard.clearAccidentalCue();
 
+      // 4. 콤보 & 마일스톤 바운스 처리
       combo++;
       if (combo > maxCombo) maxCombo = combo;
       comboBonus += combo * 10;
 
       if (combo >= 2) {
-        hudCombo.textContent = `🔥 ${combo} COMBO`;
-        hudCombo.classList.add('visible');
+        hudCombo.classList.remove('combo-pop', 'milestone-bounce');
+        void hudCombo.offsetWidth; // DOM reflow
+
+        // 5, 10, 20, 30, 40... 마일스톤 도달 시 역동적인 바운스 애니메이션!
+        const isMilestone = (combo === 5 || combo % 10 === 0);
+        if (isMilestone) {
+          hudCombo.textContent = `🔥 ${combo} COMBO! ✨`;
+          hudCombo.classList.add('visible', 'milestone-bounce');
+        } else {
+          hudCombo.textContent = `🔥 ${combo} COMBO`;
+          hudCombo.classList.add('visible', 'combo-pop');
+        }
       }
 
       lastCorrectNote = target;
       currentIndex++;
 
+      // 5. 0ms 즉시 다음 음표로 전진 (스피드런 딜레이 없음)
       if (currentIndex < playableNotes.length) {
         const next = playableNotes[currentIndex];
 
@@ -352,7 +372,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
       // ── 오답! ─────────────────────────────────────────────
       combo = 0;
       wrongCount++;
-      hudCombo.classList.remove('visible');
+      hudCombo.classList.remove('visible', 'combo-pop', 'milestone-bounce');
 
       Keyboard.flashFeedback(midi, false);
       Synth.playWrong();
@@ -500,6 +520,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
     scoreObserver?.disconnect();
     Keyboard.clearAllHighlights();
     Keyboard.clearAccidentalCue();
+    hudCombo.classList.remove('visible', 'combo-pop', 'milestone-bounce');
 
     resultModal.classList.remove('active');
     gameView.classList.remove('active');

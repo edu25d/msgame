@@ -215,7 +215,7 @@ export class ScoreOverlay {
     this.focusLayer?.querySelector('.score-focus-marker')?.remove();
     this.hintsLayer?.querySelector('.score-focus-marker')?.remove();
     this.svg?.querySelectorAll('.vf-notehead.notehead-focused')?.forEach(el => {
-      el.classList.remove('notehead-focused', 'is-success', 'is-wrong');
+      el.classList.remove('notehead-focused', 'is-wrong');
     });
     this.svg?.querySelectorAll('.vf-notehead.note-focused')?.forEach(el => {
       el.classList.remove('note-focused');
@@ -237,11 +237,13 @@ export class ScoreOverlay {
     head.classList.add('notehead-focused');
   }
 
-  triggerSuccessFeedback() {
-    const head = (this.currentFocusedRawIndex !== null) ? this.noteHeads[this.currentFocusedRawIndex] : null;
+  triggerSuccessFeedback(rawNoteIndex = this.currentFocusedRawIndex) {
+    const head = (rawNoteIndex !== null && rawNoteIndex !== undefined) ? this.noteHeads[rawNoteIndex] : null;
     if (head) {
       head.classList.remove('is-wrong');
+      void head.getBoundingClientRect(); // reflow
       head.classList.add('is-success');
+      setTimeout(() => head?.classList.remove('is-success'), 280);
     }
   }
 
@@ -711,6 +713,7 @@ export class ScoreOverlay {
 
   reset() {
     this.clearFocusMarker();
+    this.svg?.querySelectorAll('.vf-notehead.is-success')?.forEach(el => el.classList.remove('is-success'));
     this.clearWrongNote(true);
     this.clearTransientHints();
     this.svg?.querySelectorAll('.keysig-accidental-blink').forEach(el => el.classList.remove('keysig-accidental-blink'));
