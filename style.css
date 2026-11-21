@@ -336,6 +336,8 @@ html, body {
   align-items: center;
   gap: 8px;
   pointer-events: auto;
+  min-width: 0;
+  flex-shrink: 1;
 }
 .hud-song-title {
   font-size: 0.88rem;
@@ -345,6 +347,10 @@ html, body {
   padding: 3px 10px;
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(200px, 28vw);
 }
 .hud-diff-pill {
   font-size: 0.72rem;
@@ -353,25 +359,30 @@ html, body {
   border-radius: 12px;
   background: #0f172a;
   color: #38bdf8;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .hud-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   pointer-events: auto;
+  flex-shrink: 0;
 }
 .hud-combo {
   font-size: 0.82rem;
   font-weight: 800;
   color: #ea580c;
   background: rgba(255, 255, 255, 0.95);
-  padding: 3px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
   display: none;
   transform-origin: center;
   transition: background-color 0.15s, color 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .hud-combo.visible {
   display: inline-flex;
@@ -406,9 +417,11 @@ html, body {
   font-family: monospace;
   color: #0284c7;
   background: rgba(255, 255, 255, 0.92);
-  padding: 3px 10px;
+  padding: 3px 8px;
   border-radius: 20px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .hud-btn-exit {
   background: rgba(244, 63, 94, 0.9);
@@ -416,10 +429,46 @@ html, body {
   border: none;
   border-radius: 20px;
   padding: 4px 10px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0 !important;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 28px;
+}
+
+@media screen and (max-width: 860px) {
+  .hud-song-title {
+    font-size: 0.8rem;
+    padding: 2px 8px;
+    max-width: min(140px, 22vw);
+  }
+  .hud-diff-pill {
+    font-size: 0.68rem;
+    padding: 2px 6px;
+  }
+  .hud-combo {
+    font-size: 0.76rem;
+    padding: 2px 6px;
+  }
+  .hud-timer {
+    font-size: 0.8rem;
+    padding: 2px 7px;
+  }
+  .hud-btn-exit {
+    padding: 3px 8px;
+    font-size: 0.78rem;
+    min-width: 28px;
+    min-height: 26px;
+  }
+  .hud-right {
+    gap: 6px;
+  }
 }
 
 /* OSMD 스크롤 컨테이너 (줄 넘김 정밀 스냅 스크롤 보장) */

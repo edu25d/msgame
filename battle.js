@@ -248,6 +248,7 @@ import { resolveWrongPitch } from './core/music-theory.js';
         reattachTimer = setTimeout(() => {
           const liveSvg = scoreOsmdContainer?.querySelector('svg');
           if (liveSvg && currentParsed) {
+            scoreViewer?.setupSystemPositions();
             scoreOverlay.attach(liveSvg, currentParsed.rawNoteCount);
             if (isPlaying && playableNotes[currentIndex]) {
               scoreOverlay.drawFocusMarker(playableNotes[currentIndex].rawNoteIndex);

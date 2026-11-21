@@ -138,6 +138,15 @@ export class ScoreViewer {
       m.removeAttribute('width');
     });
 
+    // 현재 렌더링 영역의 가로폭 감지 (1.3배 줌 상태에 맞춰 유효 가로폭 산출)
+    const zoom = 1.3;
+    const rawWidth = this.container?.clientWidth || this.scrollEl?.clientWidth || window.innerWidth || 1200;
+    const availableWidth = rawWidth / zoom;
+
+    // 모바일/좁은 화면(화면 폭 860px 미만 또는 줌 유효폭 700px 미만)에서는 3마디/줄 적용
+    const isNarrowScreen = rawWidth < 860 || availableWidth < 700;
+    const baseMeasuresPerLine = isNarrowScreen ? 3 : 4;
+
     // 마디들을 줄(System) 단위로 그룹화
     const systems = [];
     let currentSystem = [];
@@ -157,7 +166,7 @@ export class ScoreViewer {
       }
     } else {
       measures.forEach((m, idx) => {
-        const limit = (systems.length === 0 && isPickup) ? 5 : 4;
+        const limit = (systems.length === 0 && isPickup) ? (baseMeasuresPerLine + 1) : baseMeasuresPerLine;
         if (currentSystem.length >= limit) {
           systems.push(currentSystem);
           currentSystem = [];
@@ -257,11 +266,6 @@ export class ScoreViewer {
       maxWeightedDensityInSystem = Math.max(maxWeightedDensityInSystem, sysWeightSum);
     });
 
-    // 현재 렌더링 영역의 가로폭 감지 (1.3배 줌 상태에 맞춰 유효 가로폭 산출)
-    const zoom = 1.3;
-    const rawWidth = this.container?.clientWidth || this.scrollEl?.clientWidth || window.innerWidth || 1200;
-    const availableWidth = rawWidth / zoom;
-
     // 1단계: 음가 가중치 밀도 기반 기본 간격 계산 (1.3배 확대에 맞춘 최적 비례)
     let voiceSpacing = 1.05;
     if (maxWeightedDensityInSystem > 20) {
@@ -283,8 +287,8 @@ export class ScoreViewer {
       measureStats,
       layout: {
         hasExplicitSystems,
-        maxMeasuresPerLine: isPickup ? 5 : 4,
-        stretchLastSystem: totalMeasures % 4 === 0,
+        maxMeasuresPerLine: isPickup ? (baseMeasuresPerLine + 1) : baseMeasuresPerLine,
+        stretchLastSystem: totalMeasures % baseMeasuresPerLine === 0,
         voiceSpacing: Math.round(voiceSpacing * 100) / 100
       }
     };
@@ -515,22 +519,46 @@ export class ScoreViewer {
     this.systemScrollTops = this.systemStaffCenters.map(yk => Math.max(0, Math.round(yk - y0)));
 
     // 8. 각 음표(notehead)를 해당하는 줄(System index)에 1:1 사전 매핑 (쉼표는 배제)
-    const noteheads = this.getPitchNoteheads(liveSvg);
-    this.noteToSystemIndex = noteheads.map(head => {
-      const hRect = head.getBoundingClientRect();
-      const headCenterYInSvg = (hRect.top - svgRect.top) + hRect.height / 2;
-
-      let closestIdx = 0;
-      let minDiff = Infinity;
-      this.systemStaffCenters.forEach((sysY, sIdx) => {
-        const diff = Math.abs(headCenterYInSvg - sysY);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestIdx = sIdx;
-        }
+    let mappedSystems = [];
+    if (this.osmd?.graphic?.measureList && this.osmd?.graphic?.MusicPages?.[0]?.MusicSystems) {
+      const musicSystems = this.osmd.graphic.MusicPages[0].MusicSystems;
+      this.osmd.graphic.measureList.forEach(col => {
+        col.forEach(m => {
+          const sysIdx = m.parentMusicSystem ? musicSystems.indexOf(m.parentMusicSystem) : 0;
+          m.staffEntries?.forEach(se => {
+            se.graphicalVoiceEntries?.forEach(gve => {
+              gve.notes?.forEach(n => {
+                if (!n.sourceNote?.isRest?.()) {
+                  mappedSystems.push(Math.max(0, sysIdx));
+                }
+              });
+            });
+          });
+        });
       });
-      return closestIdx;
-    });
+    }
+
+    if (mappedSystems.length > 0) {
+      this.noteToSystemIndex = mappedSystems;
+    } else {
+      const freshSvgRect = liveSvg.getBoundingClientRect();
+      const noteheads = this.getPitchNoteheads(liveSvg);
+      this.noteToSystemIndex = noteheads.map(head => {
+        const hRect = head.getBoundingClientRect();
+        const headCenterYInSvg = (hRect.top - freshSvgRect.top) + hRect.height / 2;
+
+        let closestIdx = 0;
+        let minDiff = Infinity;
+        this.systemStaffCenters.forEach((sysY, sIdx) => {
+          const diff = Math.abs(headCenterYInSvg - sysY);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestIdx = sIdx;
+          }
+        });
+        return closestIdx;
+      });
+    }
 
     // 9. 초기 렌더링 시 첫 줄(Line 0) 위치로 즉시 스냅 (scrollTop = 0)
     this.currentSystemIndex = 0;
@@ -597,6 +625,15 @@ export class ScoreViewer {
     const systemIndex = (this.noteToSystemIndex && this.noteToSystemIndex[rawNoteIndex] !== undefined)
       ? this.noteToSystemIndex[rawNoteIndex]
       : 0;
+
+    // 1번째 줄(System 0) 연주 중에는 어떠한 미세 리플로우나 터치 변위가 있어도 scrollTop 0 고정 보장
+    if (systemIndex === 0) {
+      this.currentSystemIndex = 0;
+      if (forceScroll || this.scrollEl.scrollTop !== 0) {
+        this.scrollEl.scrollTop = 0;
+      }
+      return;
+    }
 
     const targetScrollTop = this.systemScrollTops[systemIndex] ?? 0;
     const isManuallyDisplaced = Math.abs(this.scrollEl.scrollTop - targetScrollTop) > 25;
